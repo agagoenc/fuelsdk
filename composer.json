@@ -1,0 +1,22 @@
+{
+    "name": "fuel/sdk",
+    "description": "Sdk php para conexi\u0000n con los servicios de Fuel.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alejandro Gago Encinas",
+            "email": "agago@tilomotion.com"
+        }
+    ],
+    "autoload": {
+	    "psr-4": {
+	        "FuelSdk\\": "src/"
+	    }
+	},
+    "require": {
+        "ext-json": "*",
+        "ext-curl": "*",
+        "monolog/monolog": "1.x.x"
+    }
+}
