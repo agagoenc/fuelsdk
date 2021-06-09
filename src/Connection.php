@@ -6,6 +6,7 @@ namespace FuelSdk;
 
 use FuelSdk\DTO\Generic\ResponseDTO;
 use FuelSdk\Exception\ConnectionException;
+use FuelSdk\Utils\QueryItem;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
@@ -128,10 +129,145 @@ abstract class Connection
         $this->logger->error($message . " http: " . $this->httpcode . " response: " . $this->response . " request: " . json_encode($this->request));
     }
 
+    /**
+     * @param $message
+     */
     public function writeLog($message)
     {
         $this->logger->info($message);
     }
+
+    public function resetRequestAndResponse()
+    {
+        $this->request = null;
+        $this->response = null;
+    }
+
+    public function setCredentials($curl)
+    {
+        return $curl;
+    }
+
+    /**
+     * @param $path
+     * @param  $queryItems
+     * @throws ConnectionException
+     */
+    public function requestWilcardGet($path, $queryItems)
+    {
+
+        
+        //Reset Request and Response
+        $this->resetRequestAndResponse();
+
+        if($queryItems)
+        {
+            if(!is_array($queryItems))
+            {
+                throw new ConnectionException($this, "Invalid 'queryItems' parameter must be an iterable with QueryItem instances");
+            }
+
+            $extraFilters = $this->getQueryParams($queryItems);
+            $path .= $extraFilters;
+        }
+
+
+        try{
+        //list Item Cliente
+        $completeUrl = $this->getCompleteUrl($path);
+        $httpVerb = 'GET';
+
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $completeUrl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => $httpVerb,
+            CURLOPT_USERAGENT => self::USER_AGENT_NAME
+        ));
+
+        $curl = $this->setCredentials($curl);
+        $output = curl_exec($curl);
+        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $this->request = curl_getinfo($curl);
+        curl_close($curl);
+
+        $this->saveResponse($output);
+        $this->httpcode = $httpcode;
+
+
+        if($httpcode != 200)
+        {
+            $this->httpcode = $httpcode;
+            throw new ConnectionException($this, "Invalid Http code response");
+        }
+
+        }catch(ConnectionException $e){
+            throw $e;
+        }catch(\Exception $e)
+        {
+            throw new ConnectionException($this, $e->getMessage());
+        }
+    }
+
+    private function getQueryParams($queryItems)
+    {
+        $query = "";
+        $firstQuery = true;
+
+        /** @var QueryItem $queryItem */
+        foreach ($queryItems as $queryItem)
+        {
+            $aux = $queryItem->composeQuery();
+            if($aux)
+            {
+                if(!$firstQuery)
+                {
+                    $query .= "&";
+                }else{
+                    $firstQuery = false;
+                }
+
+                $query .= $aux;
+
+            }
+        }
+
+        return $query;
+    }
+
+
+
+
+    /**
+     * @return ResponseDTO
+     */
+    public function getResponse()
+    {
+        return $this->response;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getHttpcode()
+    {
+        return $this->httpcode;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFechaRefrescoLicencia()
+    {
+        return $this->fechaRefrescoLicencia;
+    }
+
+
 
 
 
