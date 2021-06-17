@@ -30,9 +30,10 @@ class ResponsePaginationDTO
             $this->prevPage = $arrayPagination["prevPage"];
         }
 
-        if(isset($arayPagination['nextPage']))
+        if(isset($arrayPagination['nextPage']))
         {
             $this->nextPage = $arrayPagination["nextPage"];
+        }else{
         }
 
         if(isset($arrayPagination["numberPages"]))

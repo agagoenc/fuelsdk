@@ -25,12 +25,12 @@ class QueryParam extends QueryRelation
 
     public function composeQuery()
     {
-        if(!empty($this->value))
+        if(empty($this->value))
         {
             return null;
         }
 
-        if(!is_iterable($this->value))
+        if(!is_array($this->value))
         {
             return "" . $this->name . $this->getSubFixName() . "=" . $this->value;
         }elseif( count($this->value) === 1){

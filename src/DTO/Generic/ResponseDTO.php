@@ -46,7 +46,7 @@ class ResponseDTO
         if(isset($bodyJson["pagination"]) && is_array($bodyJson["pagination"]))
         {
             $pagination = new ResponsePaginationDTO();
-            $pagination->fillWithPaginationArray($bodyJson["pagination"]);
+            $pagination->fillWithPaginationArray($bodyJson['pagination']);
             $this->pagination = $pagination;
         }
 

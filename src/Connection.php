@@ -37,6 +37,7 @@ abstract class Connection
     /** @var ResponseDTO $response */
     protected $response;
     protected $httpcode;
+    protected $lastUrlRequest;
 
     /**
      * Connection constructor.
@@ -155,7 +156,6 @@ abstract class Connection
      */
     public function requestWilcardGet($path, $queryItems)
     {
-
         
         //Reset Request and Response
         $this->resetRequestAndResponse();
@@ -168,14 +168,17 @@ abstract class Connection
             }
 
             $extraFilters = $this->getQueryParams($queryItems);
-            $path .= $extraFilters;
+            if(!empty($extraFilters))
+            {
+                $path .= "?" . $extraFilters;
+            }
         }
-
 
         try{
         //list Item Cliente
         $completeUrl = $this->getCompleteUrl($path);
         $httpVerb = 'GET';
+        var_dump($completeUrl);
 
         $curl = curl_init();
         curl_setopt_array($curl, array(
@@ -198,7 +201,7 @@ abstract class Connection
 
         $this->saveResponse($output);
         $this->httpcode = $httpcode;
-
+        $this->lastUrlRequest = $completeUrl;
 
         if($httpcode != 200)
         {
@@ -212,6 +215,122 @@ abstract class Connection
         {
             throw new ConnectionException($this, $e->getMessage());
         }
+    }
+
+    /**
+     * @throws ConnectionException
+     */
+    public function requestNextPage()
+    {
+        if(!$this->response->getPagination()->getNextPage())
+        {
+            return false;
+            //throw new ConnectionException($this, "There are no more grow pages to consult");
+        }
+
+        //list Item Cliente
+        $completeUrl = $this->getLastUrlRequest();
+        $currentPage = $this->response->getPagination()->getPage();
+
+        if(strpos($completeUrl, "page=" . $currentPage) !== false)
+        {
+            $completeUrl = str_replace("page=". $this->getResponse()->getPagination()->getPage(), "page=" . $this->response->getPagination()->getNextPage() ,$completeUrl);
+        }else{
+            if(strpos($completeUrl, "?") === false)
+            {
+                $completeUrl .= "?";
+            }
+            elseif(strpos($completeUrl, "&") !== false && strpos($completeUrl, "&" . $currentPage)+1 < strlen($completeUrl))
+            {
+                $completeUrl .= "&";
+            }
+            $completeUrl .= "page=" . $this->response->getPagination()->getNextPage();
+        }
+        var_dump($completeUrl);
+
+        $this->requestRawGet($completeUrl);
+        return true;
+    }
+
+    /**
+     * @throws ConnectionException
+     */
+    public function requestPreviousPage()
+    {
+        if(!$this->response->getPagination()->getPrevPage())
+        {
+            return false;
+            //throw new ConnectionException($this, "There are no more less pages to consult");
+        }
+
+        //list Item Cliente
+        $completeUrl = $this->getLastUrlRequest();
+        $currentPage = $this->response->getPagination()->getPage();
+        if(strpos($completeUrl, "page=" . $currentPage) !== false)
+        {
+            $completeUrl = str_replace("page=". $this->getResponse()->getPagination()->getPage(), "page=" . $this->response->getPagination()->getPrevPage() ,$completeUrl);
+        }else{
+            if(strpos($completeUrl, "?") === false)
+            {
+                $completeUrl .= "?";
+            }
+            elseif(strpos($completeUrl, "&") !== false && strpos($completeUrl, "&" . $currentPage)+1 < strlen($completeUrl))
+            {
+                $completeUrl .= "&";
+            }
+            $completeUrl .= "page=" . $this->response->getPagination()->getPrevPage();
+        }
+
+        $this->requestRawGet($completeUrl);
+        return true;
+    }
+
+    /**
+     * @param $completeUrl
+     * @throws ConnectionException
+     */
+    protected function requestRawGet($completeUrl)
+    {
+        $httpVerb = 'GET';
+        var_dump($completeUrl);
+
+        try{
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $completeUrl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => $httpVerb,
+                CURLOPT_USERAGENT => self::USER_AGENT_NAME
+            ));
+
+            $curl = $this->setCredentials($curl);
+            $output = curl_exec($curl);
+            $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $this->request = curl_getinfo($curl);
+            curl_close($curl);
+
+            $this->saveResponse($output);
+            $this->httpcode = $httpcode;
+            $this->lastUrlRequest = $completeUrl;
+
+            if($httpcode != 200)
+            {
+                $this->httpcode = $httpcode;
+                throw new ConnectionException($this, "Invalid Http code response");
+            }
+
+        }catch(ConnectionException $e){
+            throw $e;
+        }catch(\Exception $e)
+        {
+            throw new ConnectionException($this, $e->getMessage());
+        }
+
     }
 
     private function getQueryParams($queryItems)
@@ -240,9 +359,6 @@ abstract class Connection
         return $query;
     }
 
-
-
-
     /**
      * @return ResponseDTO
      */
@@ -266,6 +382,15 @@ abstract class Connection
     {
         return $this->fechaRefrescoLicencia;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getLastUrlRequest()
+    {
+        return $this->lastUrlRequest;
+    }
+
 
 
 

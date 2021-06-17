@@ -24,8 +24,6 @@ use FuelSdk\Connection;
 // create connection
 $conn = new ConnectionEmailPass("passUser","emailUser", "./folder/file.log", Connection::FUEL_NAME_DEV);
 
-// create request with wilcard values
-
 
 ```
 
@@ -49,8 +47,44 @@ $conn->setUserId(1);
 //Also set the user who makes the request using the old Maxterauto id
 $conn->setUserIdOld(9012);
 
-// create request with wilcard values
 
+```
+
+## Example GET
+```php
+#REQUEST GET OBJECT
+$params[] = new QueryParam("id", QueryRelation::FUEL_INT_QUERY_RELATION_EQUAL, 1);
+
+//Method requestWilcardGet allow do request for single element and for list. 
+$conn->requestWilcardGet("/usuarios/item", $params);
+
+
+#REQUEST GET LIST OBJECT [FILTERED]
+$params = [];
+
+//QueryParam allow filter by Entity's attribute, and type filter
+$params[] = new QueryParam("fechaAlta", QueryRelation::FUEL_INT_QUERY_RELATION_GROW, '2019-08-12');
+
+//QueryPagination allow return specific page, and number results por page.  Also its possible send only max number results 
+// by QueryParam with         $params[] = new QueryParam("maxResults", QueryRelation::FUEL_INT_QUERY_RELATION_EQUAL, 2);
+$params[] = new QueryPagination(3,2);
+
+//Method requestWilcardGet allow do request for single element and for list. 
+$conn->requestWilcardGet("/usuarios/list", $params);
+var_dump(json_encode($conn->getResponse()->getData()));
+
+$iterations = $conn->getResponse()->getPagination()->getNumberPages();
+while($iterations>1)
+{
+    $conn->requestNextPage();
+    var_dump(json_encode($conn->getResponse()->getData()));
+    $iterations--;
+}
+```
+
+## Example POST
+```php
+#REQUEST POST OBJECT
 
 ```
 
