@@ -163,16 +163,19 @@ class ConnectionIpAuthenticated extends Connection
         {
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 'cliente: ' . $this->licenseId,
-                'usuario: ' . $this->userId
-            ));
+                'usuario: ' . $this->userId,
+                'Content-Type: application/json'
+        ));
         }elseif(!is_null($this->userIdOld)){
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 'cliente: ' . $this->licenseId,
-                'usuarioold: ' . $this->userIdOld
+                'usuarioold: ' . $this->userIdOld,
+                'Content-Type: application/json'
             ));
         }else{
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 'cliente: ' . $this->licenseId,
+                'Content-Type: application/json'
             ));
         }
 

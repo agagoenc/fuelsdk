@@ -8,6 +8,7 @@ class ResponseDTO
     private $codeResponse;
     private $status = false;
     private $httpCode;
+    private $error;
     private $originalResponse;
     /**
      * @var ResponsePaginationDTO $pagination
@@ -104,6 +105,15 @@ class ResponseDTO
     {
         return $this->pagination;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getError()
+    {
+        return $this->error;
+    }
+
 
 
 }

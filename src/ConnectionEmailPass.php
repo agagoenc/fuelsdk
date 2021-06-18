@@ -83,7 +83,7 @@ class ConnectionEmailPass extends Connection
             if($httpcode != 200)
             {
                 $this->httpcode = $httpcode;
-                throw new ConnectionException($this, "Invalid Credentials",);
+                throw new ConnectionException($this, "Invalid Credentials");
             }
             $response = json_decode($output, true);
 
@@ -112,9 +112,16 @@ class ConnectionEmailPass extends Connection
         return true;
     }
 
-    public function setCredentials()
+    public function setCredentials($curl)
     {
 
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            "Authorization: Bearer " . $this->token . " ",
+            'Content-Type: application/json'
+        ));
+
+
+        return $curl;
     }
 
 
