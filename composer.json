@@ -1,5 +1,5 @@
 {
-    "name": "fuel/sdk",
+    "name": "tilomotion/fuelsdk",
     "description": "Sdk php para conexi\u0000n con los servicios de Fuel.",
     "type": "library",
     "license": "MIT",
