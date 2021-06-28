@@ -49,8 +49,8 @@ $conn->setUserIdOld(9012);
 
 
 ```
-
-## Example GET
+## Examples
+#### Example GET single result
 ```php
 #REQUEST GET OBJECT
 $params[] = new QueryParam("id", QueryRelation::FUEL_INT_QUERY_RELATION_EQUAL, 1);
@@ -58,7 +58,10 @@ $params[] = new QueryParam("id", QueryRelation::FUEL_INT_QUERY_RELATION_EQUAL, 1
 //Method requestWilcardGet allow do request for single element and for list. 
 $conn->requestWilcardGet("/usuarios/item", $params);
 
+```
 
+#### Example GET list, with pagination
+```php
 #REQUEST GET LIST OBJECT [FILTERED]
 $params = [];
 
@@ -77,16 +80,72 @@ $iterations = $conn->getResponse()->getPagination()->getNumberPages();
 while($iterations>1)
 {
     $conn->requestNextPage();
-    var_dump(json_encode($conn->getResponse()->getData()));
+    var_dump($conn->getResponse()->getData());
     $iterations--;
 }
 ```
 
-## Example POST
+#### Example POST
 ```php
 #REQUEST POST OBJECT
+$data = array(
+            "sede"=> 2000,
+            "tipoCliente"=>3,
+            "tratamiento"=>1,
+            "nombre"=> "Ernesto",
+            "apellidos"=> "Adroher Cuevas",
+            "fechaNacimiento"=> "1980-04-20",
+            "usuarioOriginal"=> 1,
+            "usuarioResponsable"=> 1,
+            "procedencia"=>3,
+            "concesionariosPermitidos"=> [999,268],
+            "fechaAlta"=> "2020-03-09 17:02:50"
+        );
+$conn->requestWilcardPost("/terceros/create", $data);
+//Trow an exception if httpcode != 200
+
+//Get Id new object
+$responseData = $conn->getResponse()->getData();
+if(isset($responseData['id']))
+{
+    $id = $responseData['id']
+}
+
+//Get object created
+var_dump($conn->getResponse()->getData());
 
 ```
+
+#### Example PUT
+```php
+$id = 1; //Id get by GET request item or list, or by previous POST request to create.
+$data = array(
+        "id" => $id,
+        "nombre"=> "Carlos",
+        "apellidos"=> "Santander Huelva",
+);
+$conn->requestWilcardPut("/terceros/update", $data);
+ //Trow an exception if httpcode != 200 No update element
+ 
+```
+
+#### Example DELETE
+```php
+$id = 1; //Id get by GET request item or list, or by previous POST request to create.
+$params[] = new QueryParam("id", QueryRelation::FUEL_INT_QUERY_RELATION_EQUAL, $id);
+
+$conn->requestWilcardDelete("/terceros/delete", $params);   
+//Trow an exception if httpcode != 200 No element deleted
+ 
+```
+
+## HTTP CODES
+- 200: OK 
+- 204: NOT FOUND. Element's Id not found for this license. Available on GET or DELETE for item or list. On Create or Update when related object's id not exists.
+- 400: Insufficient parameters on request. Normally on PUT or POST request.
+- 401: Invalid credentials, require refresh.
+- 409: Already exists element. Usually on POST request.
+- 500: Internal Server Error. Report to developers.
 
 ## Documentation
 
@@ -95,35 +154,32 @@ while($iterations>1)
 
 
 ## Third Party Packages
-
 Third party handlers, formatters and processors are
 [listed in the wiki](https://github.com/agagoenc/fuel-sdk/wiki/Third-Party-Packages). You
 can also add your own there if you publish one.
 
 ## About
 
-### Requirements
+#### Requirements
 
 - Fuel sdk works with  PHP 5.4 or above.
 
-### Submitting bugs and feature requests
+#### Submitting bugs and feature requests
 
 Bugs and feature request are tracked on [GitHub](https://github.com/agagoenc/fuel-sdk/issues)
 
-### Framework Integrations
+#### Framework Integrations
 
 - Frameworks and libraries using [PSR-3](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md)
   can be used very easily with Monolog since it implements the interface.
 
-### Author
+#### Author
 
 Alejandro Gago Encinas - <agago@tilomotion.com><br />
 See also the list of [contributors](https://github.com/agagoenc/fuel-sdk/contributors) which participated in this project.
 
-### License
+#### License
 
 FuelSdk is licensed under the MIT License - see the `LICENSE` file for details
-
-### Acknowledgements
 
 

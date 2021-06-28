@@ -294,6 +294,82 @@ abstract class Connection
         }
     }
 
+    /**
+     * @param $path
+     * @param  $queryItems
+     * @throws ConnectionException
+     */
+    public function requestWilcardDelete($path, $queryItems)
+    {
+
+        //Reset Request and Response
+        $this->resetRequestAndResponse();
+
+        if($queryItems)
+        {
+            if(!is_array($queryItems))
+            {
+                throw new ConnectionException($this, "Invalid 'queryItems' parameter must be an iterable with QueryItem instances");
+            }
+
+            $extraFilters = $this->getQueryParams($queryItems);
+            if(!empty($extraFilters))
+            {
+                $path .= "?" . $extraFilters;
+            }
+        }
+
+        $completeUrl = $this->getCompleteUrl($path);
+        $this->requestRawDelete($completeUrl);
+    }
+
+    /**
+     * @param $completeUrl
+     * @throws ConnectionException
+     */
+    protected function requestRawDelete($completeUrl)
+    {
+        $httpVerb = 'DELETE';
+        var_dump($completeUrl);
+
+        try{
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $completeUrl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => $httpVerb,
+                CURLOPT_USERAGENT => self::USER_AGENT_NAME
+            ));
+
+            $curl = $this->setCredentials($curl);
+            $output = curl_exec($curl);
+            $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $this->request = curl_getinfo($curl);
+            curl_close($curl);
+
+            $this->saveResponse($output);
+            $this->httpcode = $httpcode;
+            $this->lastUrlRequest = $completeUrl;
+
+            if($httpcode != 200)
+            {
+                $this->httpcode = $httpcode;
+                throw new ConnectionException($this, "Invalid Http code response");
+            }
+
+        }catch(ConnectionException $e){
+            throw $e;
+        }catch(\Exception $e)
+        {
+            throw new ConnectionException($this, $e->getMessage());
+        }
+    }
+
     #POST SERVICES
     /**
      * @param $path
@@ -331,6 +407,42 @@ abstract class Connection
         $this->requestRawPostPut($completeUrl,  $bodyJson, 'POST');
     }
 
+    #PUT SERVICES
+    /**
+     * @param $path
+     * @param  $queryItems
+     * @throws ConnectionException
+     */
+    public function requestWilcardPut($path, $data, $queryItems = array())
+    {
+
+        //Reset Request and Response
+        $this->resetRequestAndResponse();
+
+        #QueryItems are allowed for styleResponse
+        if($queryItems)
+        {
+            if(!is_array($queryItems))
+            {
+                throw new ConnectionException($this, "Invalid 'queryItems' parameter must be an iterable with QueryItem instances");
+            }
+
+            $extraFilters = $this->getQueryParams($queryItems);
+            if(!empty($extraFilters))
+            {
+                $path .= "?" . $extraFilters;
+            }
+        }
+
+        $bodyJson = null;
+        if(is_array($data))
+        {
+            $bodyJson = json_encode(array("data"=>$data));
+        }
+
+        $completeUrl = $this->getCompleteUrl($path);
+        $this->requestRawPostPut($completeUrl,  $bodyJson, 'PUT');
+    }
     /**
      * @param $completeUrl
      * @param string $httpVerb
