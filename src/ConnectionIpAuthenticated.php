@@ -157,25 +157,25 @@ class ConnectionIpAuthenticated extends Connection
         return true;
     }
 
-    public function setCredentials($curl)
+    public function setCredentials($curl, $contentType = "application/json")
     {
         if(!is_null($this->userId))
         {
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 'cliente: ' . $this->licenseId,
                 'usuario: ' . $this->userId,
-                'Content-Type: application/json'
+                'Content-Type: ' . $contentType
         ));
         }elseif(!is_null($this->userIdOld)){
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 'cliente: ' . $this->licenseId,
                 'usuarioold: ' . $this->userIdOld,
-                'Content-Type: application/json'
+                'Content-Type: ' . $contentType
             ));
         }else{
             curl_setopt($curl, CURLOPT_HTTPHEADER, array(
                 'cliente: ' . $this->licenseId,
-                'Content-Type: application/json'
+                'Content-Type: ' . $contentType
             ));
         }
 

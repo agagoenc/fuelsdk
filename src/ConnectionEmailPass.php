@@ -112,12 +112,12 @@ class ConnectionEmailPass extends Connection
         return true;
     }
 
-    public function setCredentials($curl)
+    public function setCredentials($curl, $contentType = 'application/json')
     {
 
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
             "Authorization: Bearer " . $this->token . " ",
-            'Content-Type: application/json'
+            'Content-Type: ' . $contentType
         ));
 
 

@@ -55,7 +55,7 @@ class ResponseDTO
 
     public function __toString()
     {
-        return $this->originalResponse;
+        return (string)$this->originalResponse;
     }
 
     /**

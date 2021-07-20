@@ -6,6 +6,7 @@ namespace FuelSdk;
 
 use FuelSdk\DTO\Generic\ResponseDTO;
 use FuelSdk\Exception\ConnectionException;
+use FuelSdk\Utils\PostFieldParam;
 use FuelSdk\Utils\QueryItem;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -144,7 +145,7 @@ abstract class Connection
         $this->response = null;
     }
 
-    public function setCredentials($curl)
+    public function setCredentials($curl, $ContentType = 'application/json')
     {
         return $curl;
     }
@@ -208,7 +209,6 @@ abstract class Connection
             }
             $completeUrl .= "page=" . $this->response->getPagination()->getNextPage();
         }
-        var_dump($completeUrl);
 
         $this->requestRawGet($completeUrl);
         return true;
@@ -254,7 +254,6 @@ abstract class Connection
     protected function requestRawGet($completeUrl)
     {
         $httpVerb = 'GET';
-        var_dump($completeUrl);
 
         try{
             $curl = curl_init();
@@ -330,7 +329,6 @@ abstract class Connection
     protected function requestRawDelete($completeUrl)
     {
         $httpVerb = 'DELETE';
-        var_dump($completeUrl);
 
         try{
             $curl = curl_init();
@@ -450,7 +448,6 @@ abstract class Connection
      */
     protected function requestRawPostPut($completeUrl, $body,  $httpVerb='POST')
     {
-        var_dump($completeUrl);
 
         try{
             $curl = curl_init();
@@ -492,6 +489,172 @@ abstract class Connection
         }
     }
 
+    /**
+     * @param $path
+     * @param $postFields
+     * @param array $queryItems
+     * @throws ConnectionException
+     */
+    public function requestWilcardImagePost($path, $postFields, $queryItems= array())
+    {
+        $this->requestWilcardImage($path, $postFields, 'POST', $queryItems);
+    }
+
+    /**
+     * @param $path
+     * @param $postFields
+     * @param array $queryItems
+     * @throws ConnectionException
+     */
+    public function requestWilcardImagePut($path, $postFields, $queryItems= array())
+    {
+        $this->requestWilcardImage($path, $postFields, 'PUT', $queryItems);
+    }
+
+    /**
+     * @param $path
+     * @param $postFields
+     * @param $httpVerb
+     * @param array $queryItems
+     * @throws ConnectionException
+     */
+    private function requestWilcardImage( $path, $postFields, $httpVerb,  $queryItems = array() )
+    {
+        //Reset Request and Response
+        $this->resetRequestAndResponse();
+
+        #QueryItems are allowed for styleResponse
+        if($queryItems)
+        {
+            if(!is_array($queryItems))
+            {
+                throw new ConnectionException($this, "Invalid 'queryItems' parameter must be an iterable with QueryItem instances");
+            }
+
+            $extraFilters = $this->getQueryParams($queryItems);
+            if(!empty($extraFilters))
+            {
+                $path .= "?" . $extraFilters;
+            }
+        }
+
+        $completeUrl = $this->getCompleteUrl($path);
+        $postFieldsArray = array();
+
+        foreach ($postFields as $field)
+        {
+            if($field instanceof PostFieldParam)
+            {
+                $field->addToArrayPost($postFieldsArray);
+            }
+        }
+
+        $this->requestRawPostFields($completeUrl, $postFieldsArray, $httpVerb);
+
+
+    }
+
+    /**
+     * @param $completeUrl
+     * @param $postFieldsArray
+     * @param $httpVerb
+     * @throws ConnectionException
+     */
+    private function requestRawPostFields($completeUrl, $postFieldsArray, $httpVerb)
+    {
+
+        try{
+
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $completeUrl,
+                CURLOPT_HTTPHEADER => array(
+                    'Content-Type: multipart/form-data',
+                    'Content-Length: 92050',
+                    'cliente: 144',
+                    'usuarioOld: 9010'
+                ),
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => strtoupper($httpVerb),
+                CURLOPT_USERAGENT => self::USER_AGENT_NAME,
+ //               CURLOPT_POSTFIELDS => $postFieldsArray
+//            CURLOPT_SSL_VERIFYHOST => false,
+//            CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_POST => 1,
+            ));
+ //           curl_setopt($curl, CURLOPT_POST, 1);
+            //curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($postFieldsArray, '', '&') );
+            //curl_setopt($curl, CURLOPT_POSTFIELDS, $postFieldsArray );
+            //curl_setopt($curl, CURLOPT_HTTPHEADER, array('cliente: 144', 'usuarioOld: 9010'));
+            //$curl = $this->setCredentials($curl, 'multipart/form-data' );
+
+            //var_dump(new \CURLFile('/C:/Users/Alejandro Gago/Pictures/luxury_mercedes.png'));
+            curl_setopt($curl, CURLOPT_POSTFIELDS,  array('imagenFile'=> new \CURLFile('/C:/laragon/www/fuel-sdk/fuel-sdk/src/afdas.jpg'), 'vehiculoTasacion' => '320'));
+            //$curl = $this->setCredentials($curl, 'multipart/form-data; boundary=--------------------------479526511564692315915960' );
+            //$curl = $this->setCredentials($curl);
+
+            $output = curl_exec($curl);
+            $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $this->request = curl_getinfo($curl);
+            curl_close($curl);
+
+/*
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://apidev.fuelindata.com/api/v1/vehiculo/tasaciones/fotos/createvehiculo',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+//            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+//            CURLOPT_SSL_VERIFYHOST => false,
+//            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_POST => 1,
+            CURLOPT_POSTFIELDS => array('imagenFile' => new \CURLFile('/C:/Users/Alejandro Gago/Pictures/luxury_mercedes.png'), 'vehiculoTasacion' => '320'),
+            CURLOPT_HEADER => 1,
+            CURLINFO_HEADER_OUT => 1,
+            CURLOPT_HTTPHEADER => array(
+//                'Content-Type: multipart/form-data',
+                'cliente: 144',
+                'usuarioOld: 9010'
+            ),
+        ));
+*/
+
+//        $output = curl_exec($curl);
+        //var_dump($output);
+//        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+//        $this->request = curl_getinfo($curl);
+        //var_dump($this->request);
+
+ //       curl_close($curl);
+
+
+        $this->saveResponse($output);
+            $this->httpcode = $httpcode;
+            $this->lastUrlRequest = $completeUrl;
+
+            if($httpcode != 200)
+            {
+                $this->httpcode = $httpcode;
+                throw new ConnectionException($this, "Invalid Http code response");
+            }
+
+        }catch(ConnectionException $e){
+            throw $e;
+        }catch(\Exception $e)
+        {
+            throw new ConnectionException($this, $e->getMessage());
+        }
+    }
 
 
     private function getQueryParams($queryItems)
@@ -551,18 +714,6 @@ abstract class Connection
     {
         return $this->lastUrlRequest;
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }
