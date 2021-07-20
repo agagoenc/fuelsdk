@@ -1,6 +1,6 @@
 # Fuel Sdk - Connection with Fuel 
-[![Total Downloads](https://img.shields.io/packagist/dt/fuel/sdk.svg)](https://packagist.org/packages/fuel/sdk)
-[![Latest Stable Version](https://img.shields.io/packagist/v/fuel/sdk.svg)](https://packagist.org/packages/fuel/sdk)
+[![Total Downloads](https://img.shields.io/packagist/dt/tilomotion/sdk.svg)](https://packagist.org/packages/tilomotion/fuelsdk)
+[![Latest Stable Version](https://img.shields.io/packagist/v/tilomotion/sdk.svg)](https://packagist.org/packages/tilomotion/fuelsdk)
 
 This library allow use Fuel's API with all kind of authentication.
 
